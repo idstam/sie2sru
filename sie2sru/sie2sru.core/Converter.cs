@@ -5,7 +5,8 @@ namespace sie2sru.core
     public class Converter
     {
         private Dictionary<string,string> _mappings = new Dictionary<string,string>();
-        private Dictionary<string, int> _sums = new Dictionary<string, int>();
+        private Dictionary<string, decimal> _sums = new Dictionary<string, decimal>();
+        private string _observeSru = "7251";
 
         public Converter()
         {
@@ -22,7 +23,7 @@ namespace sie2sru.core
         {
             var sie = new SieDocument();
             sie.Callbacks.VER = handleVoucher;
-            sie.Callbacks.UB = handleIB;
+            sie.Callbacks.IB = handleIB;
 
             sie.ReadDocument(fileName);
 
@@ -30,7 +31,7 @@ namespace sie2sru.core
             {
                 if (_sums[k] != 0)
                 {
-                    Console.WriteLine(k + " " + Math.Abs(_sums[k]));
+                    Console.WriteLine(k + " " + Decimal.Round(Math.Abs(_sums[k])));
                 }
             }
         }
@@ -49,8 +50,11 @@ namespace sie2sru.core
                 {
                     sru = r.Account.SRU.First();
                 }
-
-                var s = _sums[sru] + Decimal.ToInt32(r.Amount);
+                if(sru == _observeSru)
+                {
+                    Console.WriteLine($"Voucher {v.Number} {r.Account.Number} {r.Amount}");
+                }
+                var s = _sums[sru] + r.Amount;
                 _sums[sru] = s;
             }
         }
@@ -67,7 +71,13 @@ namespace sie2sru.core
             {
                 sru = v.Account.SRU.First();
             }
-            
+
+            if (sru == _observeSru)
+            {
+                Console.WriteLine($"IB {v.Account.Number} {v.Amount}");
+            }
+
+
             var s = _sums[sru] + Decimal.ToInt32(v.Amount);
             _sums[sru] = s;
         }
